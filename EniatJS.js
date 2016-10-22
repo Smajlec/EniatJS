@@ -15,7 +15,7 @@ var EWindows = [];
 var EWindowHierarchy = [];
 
 // Animations properties
-var EAnimator = true;
+var EAnimator = false;
 var EAnimatorRefresh = 50;
 
 var EWindowLastPos = [];
@@ -150,7 +150,7 @@ function EWindow(name, size, position) {
 	EUpdateStyle(EWindows.indexOf(this));
 
 	// Events
-	this.windowTitle.onmousedown = function(e) { EMovingWindow = e.target.parentNode.id.split("_")[1]; EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); EFocusWindow(EMovingWindow); };
+	this.windowTitle.onmousedown = function(e) { EMovingWindow = parseInt(e.target.parentNode.id.split("_")[1]); EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); EFocusWindow(EMovingWindow); EUpdateAll(); };
 	this.resizeButton.onmousedown = function(e) { EResizingWindow = parseInt(e.target.parentNode.id.split("_")[1]); };
 }
 
@@ -184,9 +184,7 @@ window.onmousemove = function(e) {
 		if (EWindows[EMovingWindow] != null) {
 			EWindows[EMovingWindow].position = new EVector((e.clientX - EMovingOffset.x), (e.clientY - EMovingOffset.y))
 			
-			for (i=0; i < EWindows.length; i++) {
-				EUpdateStyle(i);
-			}
+			EUpdateStyle(EMovingWindow);
 		}
 	}
 	if (EResizingWindow != -1) {
@@ -197,6 +195,13 @@ window.onmousemove = function(e) {
 			EWindows[EResizingWindow].size = new EVector(sizeX, sizeY);
 			EUpdateStyle(EResizingWindow);
 		}
+	}
+}
+
+// Updating all styles
+function EUpdateAll() {
+	for (i=0;  i < EWindows.length; i++) {
+		EUpdateStyle(i);
 	}
 }
 
