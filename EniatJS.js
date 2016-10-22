@@ -150,13 +150,28 @@ function EWindow(name, size, position) {
 	EUpdateStyle(EWindows.indexOf(this));
 
 	// Events
-	this.windowTitle.onmousedown = function(e) { EMovingWindow = e.target.parentNode.id.split("_")[1]; EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); };
-	this.resizeButton.onmousedown = function(e) { EResizingWindow = e.target.parentNode.id.split("_")[1]; };
+	this.windowTitle.onmousedown = function(e) { EMovingWindow = e.target.parentNode.id.split("_")[1]; EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); EFocusWindow(EMovingWindow); };
+	this.resizeButton.onmousedown = function(e) { EResizingWindow = parseInt(e.target.parentNode.id.split("_")[1]); };
 }
 
 /*
 * Window functions
 */
+
+// Rearranging windows hierarchy
+function EFocusWindow(id) {
+
+	var newHierarchy = [];
+	newHierarchy[0] = parseInt(id);
+	for (i=0; i < EWindowHierarchy.length; i++) {
+		if (EWindowHierarchy[i] != parseInt(id)) {
+			newHierarchy.push(EWindowHierarchy[i]);
+		}
+	}
+
+	EWindowHierarchy = newHierarchy;
+	console.log(newHierarchy);
+}
 
 // Dropping movement
 window.onmouseup = function() {
@@ -168,7 +183,7 @@ window.onmousemove = function(e) {
 	if (EMovingWindow != -1) {
 		if (EWindows[EMovingWindow] != null) {
 			EWindows[EMovingWindow].position = new EVector((e.clientX - EMovingOffset.x), (e.clientY - EMovingOffset.y))
-			console.log(EWindowHierarchy.toString());
+			
 			for (i=0; i < EWindows.length; i++) {
 				EUpdateStyle(i);
 			}
@@ -176,7 +191,6 @@ window.onmousemove = function(e) {
 	}
 	if (EResizingWindow != -1) {
 		if (EWindows[EResizingWindow] != null) {
-
 			var sizeX = e.clientX - EWindows[EResizingWindow].window.offsetLeft > EWindows[EResizingWindow].minSize.x ? e.clientX - EWindows[EResizingWindow].window.offsetLeft : EWindows[EResizingWindow].minSize.x;
 			var sizeY = e.clientY - EWindows[EResizingWindow].window.offsetTop > EWindows[EResizingWindow].minSize.y ? e.clientY - EWindows[EResizingWindow].window.offsetTop : EWindows[EResizingWindow].minSize.y;
 
@@ -200,7 +214,7 @@ function EUpdateStyle(id) {
 	EWindows[id].window.style.width = EWindows[id].size.x + "px";
 	EWindows[id].window.style.height = EWindows[id].size.y + "px";
 
-	EWindows[id].window.style.zIndex = EWindowHierarchy.indexOf(id);
+	EWindows[id].window.style.zIndex = EWindowHierarchy.length - EWindowHierarchy.indexOf(id);
 }
 
 
