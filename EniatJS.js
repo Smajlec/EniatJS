@@ -1,17 +1,17 @@
 /*
-Copyright 2016 Smajlec
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-limitations under the License.
+*	Copyright 2016 Smajlec
+*
+*	Licensed under the Apache License, Version 2.0 (the "License");
+*	you may not use this file except in compliance with the License.
+*	You may obtain a copy of the License at
+*
+*		http://www.apache.org/licenses/LICENSE-2.0
+*
+*	Unless required by applicable law or agreed to in writing, software
+*	distributed under the License is distributed on an "AS IS" BASIS,
+*	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*	See the License for the specific language governing permissions and
+*	limitations under the License.
 */
 
 /*
@@ -118,8 +118,11 @@ function EWindow(name, size, position) {
 	this.size = size;
 	this.minSize = new EVector(200, 100);
 	this.maxSize = new EVector(2000, 1000);
+
 	this.position = position;
+
 	this.isActive = false;
+	this.scrolling = true;
 
 	// Constructing window
 	this.window = document.createElement("div");
@@ -164,6 +167,11 @@ function EWindow(name, size, position) {
 		EFocusWindow(EWindows.indexOf(this));
 	}
 
+	this.setScrolling = function(scrolling) {
+		this.scrolling = scrolling;
+		EUpdateStyle(EWindows.indexOf(this));
+	}
+
 	// Initial style update
 	EUpdateAll();
 
@@ -179,6 +187,12 @@ function EWindow(name, size, position) {
 /*
 * Window functions
 */
+
+// Window scrolling
+function ESetScrolling(id, scrolling) {
+	EWindows[id].scrolling = scrolling;
+	EUpdateStyle(id);
+}
 
 // Window active
 function ESetActive(id, active) {
@@ -326,6 +340,12 @@ function EUpdateStyle(id) {
 		EWindows[id].window.style.display = "initial";
 	} else {
 		EWindows[id].window.style.display = "none";
+	}
+
+	if (EWindows[id].scrolling) {
+		EWindows[id].content.style.overflow = "auto";
+	} else {
+		EWindows[id].content.style.overflow = "hidden";
 	}
 
 	EWindows[id].window.style.left = EWindows[id].position.x + "px";
