@@ -23,6 +23,7 @@ var EWindowLastPos = [];
 // Snapping
 var ESnapping = true;
 var ESnapDistance = 10;
+var ESnapToInactive = false;
 
 // Moving properties
 var EMovingWindow = -1;
@@ -201,6 +202,9 @@ window.onmousemove = function(e) {
 				
 				for (i=0; i < EWindows.length; i++) {
 					if (i != EMovingWindow) {
+						if (!ESnapToInactive && !EWindows[i].isActive) {
+							continue;
+						}
 						xGuides.push(EWindows[i].position.x);
 						xGuides.push(EWindows[i].position.x + EWindows[i].size.x);
 
