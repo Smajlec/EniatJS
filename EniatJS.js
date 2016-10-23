@@ -20,6 +20,10 @@ var EAnimatorRefresh = 50;
 
 var EWindowLastPos = [];
 
+// Snapping
+var ESnapping = true;
+var ESnapDistance = 10;
+
 // Moving properties
 var EMovingWindow = -1;
 var EResizingWindow = -1;
@@ -41,25 +45,15 @@ function EAnimate() {
 		
 		if (EWindowLastPos[i] != null) {
 			var delta = new EVector(EWindows[i].position.x - EWindowLastPos[i].x, EWindows[i].position.y - EWindowLastPos[i].y)
-			if (delta.x > 100) {
-				delta.x = 100;
-			}
-			if (delta.y > 100) {
-				delta.y = 100;
-			}
-			if (delta.x < -100) {
-				delta.x = -100;
-			}
-			if (delta.y < -100) {
-				delta.y = -100;
-			}
+			delta.x = EClamp(delta.x, -100, 100);
+			delta.y = EClamp(delta.y, -100, 100);
 
 		} else {
 			var delta = new EVector(0, 0);
 		}
 
 		EWindows[i].window.style.transform = "skew(" + (-delta.x / 15) + "deg, 0deg)";
-		if (EMovingWindow == i) {
+		if (EMovingWindow == i || EResizingWindow == i) {
 			EWindows[i].window.style.opacity = "0.75";
 		} else {
 			EWindows[i].window.style.opacity = "1";
@@ -106,6 +100,7 @@ function EWindow(name, size, position) {
 
 	this.size = size;
 	this.minSize = new EVector(200, 100);
+	this.maxSize = new EVector(2000, 1000);
 	this.position = position;
 
 	// Constructing window
@@ -122,7 +117,6 @@ function EWindow(name, size, position) {
 
 	this.windowTitle = document.createElement("div");
 
-	this.windowTitle.textContent = this.name;
 	this.windowTitle.className = "eWindowTitle";
 
 	this.content = document.createElement("div");
@@ -147,11 +141,13 @@ function EWindow(name, size, position) {
 	EWindowHierarchy.push(EWindows.indexOf(this));
 
 	// Initial style update
-	EUpdateStyle(EWindows.indexOf(this));
+	EUpdateAll();
 
 	// Events
 	this.windowTitle.onmousedown = function(e) { EMovingWindow = parseInt(e.target.parentNode.id.split("_")[1]); EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); EFocusWindow(EMovingWindow); EUpdateAll(); };
 	this.resizeButton.onmousedown = function(e) { EResizingWindow = parseInt(e.target.parentNode.id.split("_")[1]); };
+	
+	this.content.onmousedown = function(e) { EFocusWindow(parseInt(e.target.parentNode.id.split("_")[1])); EUpdateAll(); };
 }
 
 /*
@@ -170,7 +166,6 @@ function EFocusWindow(id) {
 	}
 
 	EWindowHierarchy = newHierarchy;
-	console.log(newHierarchy);
 }
 
 // Dropping movement
@@ -182,15 +177,93 @@ window.onmouseup = function() {
 window.onmousemove = function(e) {
 	if (EMovingWindow != -1) {
 		if (EWindows[EMovingWindow] != null) {
-			EWindows[EMovingWindow].position = new EVector((e.clientX - EMovingOffset.x), (e.clientY - EMovingOffset.y))
+
+			// Snapping
+			if (ESnapping) {
+				var xGuides = [];
+				var yGuides = [];
+				
+				for (i=0; i < EWindows.length; i++) {
+					if (i != EMovingWindow) {
+						xGuides.push(EWindows[i].position.x);
+						xGuides.push(EWindows[i].position.x + EWindows[i].size.x);
+
+						yGuides.push(EWindows[i].position.y);
+						yGuides.push(EWindows[i].position.y + EWindows[i].size.y);
+					}
+				}
+
+				var windowX = (e.clientX - EMovingOffset.x);
+				var windowY = (e.clientY - EMovingOffset.y);
+
+				for (x=0; x < xGuides.length; x++) {
+					if (EIsClose((e.clientX - EMovingOffset.x), ESnapDistance, xGuides[x])) {
+						windowX = xGuides[x];
+						break;
+					}
+					if (EIsClose((e.clientX - EMovingOffset.x) + EWindows[EMovingWindow].size.x, ESnapDistance, xGuides[x])) {
+						windowX = xGuides[x] - EWindows[EMovingWindow].size.x;
+						break;
+					}
+				}
+
+				for (y=0; y < yGuides.length; y++) {
+					if (EIsClose((e.clientY - EMovingOffset.y), ESnapDistance, yGuides[y])) {
+						windowY = yGuides[y];
+						break;
+					}
+					if (EIsClose((e.clientY - EMovingOffset.y) + EWindows[EMovingWindow].size.y, ESnapDistance, yGuides[y])) {
+						windowY = yGuides[y] - EWindows[EMovingWindow].size.y;
+						break;
+					}
+				}
+
+				EWindows[EMovingWindow].position = new EVector(windowX, windowY);
+			} else {
+				EWindows[EMovingWindow].position = new EVector((e.clientX - EMovingOffset.x), (e.clientY - EMovingOffset.y))
+			}
 			
 			EUpdateStyle(EMovingWindow);
 		}
 	}
 	if (EResizingWindow != -1) {
 		if (EWindows[EResizingWindow] != null) {
-			var sizeX = e.clientX - EWindows[EResizingWindow].window.offsetLeft > EWindows[EResizingWindow].minSize.x ? e.clientX - EWindows[EResizingWindow].window.offsetLeft : EWindows[EResizingWindow].minSize.x;
-			var sizeY = e.clientY - EWindows[EResizingWindow].window.offsetTop > EWindows[EResizingWindow].minSize.y ? e.clientY - EWindows[EResizingWindow].window.offsetTop : EWindows[EResizingWindow].minSize.y;
+	
+			var sizeX = e.clientX - EWindows[EResizingWindow].window.offsetLeft
+			var sizeY = e.clientY - EWindows[EResizingWindow].window.offsetTop
+
+			if (ESnapping) {
+				var xGuides = [];
+				var yGuides = [];
+				
+				for (i=0; i < EWindows.length; i++) {
+					if (i != EResizingWindow) {
+						xGuides.push(EWindows[i].position.x);
+						xGuides.push(EWindows[i].position.x + EWindows[i].size.x);
+
+						yGuides.push(EWindows[i].position.y);
+						yGuides.push(EWindows[i].position.y + EWindows[i].size.y);
+					}
+				}
+
+				for (x=0; x < xGuides.length; x++) {
+					if (EIsClose(e.clientX, ESnapDistance, xGuides[x])) {
+						sizeX = xGuides[x] - EWindows[EResizingWindow].position.x;
+						break;
+					}
+				}
+
+				for (y=0; y < yGuides.length; y++) {
+					if (EIsClose(e.clientY, ESnapDistance, yGuides[y])) {
+						sizeY = yGuides[y] - EWindows[EResizingWindow].position.y;
+						break;
+					}
+				}
+			}
+
+			sizeX = EClamp(sizeX, EWindows[EResizingWindow].minSize.x, EWindows[EResizingWindow].maxSize.x);
+			sizeY = EClamp(sizeY, EWindows[EResizingWindow].minSize.y, EWindows[EResizingWindow].maxSize.y);
+
 
 			EWindows[EResizingWindow].size = new EVector(sizeX, sizeY);
 			EUpdateStyle(EResizingWindow);
@@ -219,13 +292,29 @@ function EUpdateStyle(id) {
 	EWindows[id].window.style.width = EWindows[id].size.x + "px";
 	EWindows[id].window.style.height = EWindows[id].size.y + "px";
 
+	EWindows[id].windowTitle.textContent = EWindows[id].name;
+
 	EWindows[id].window.style.zIndex = EWindowHierarchy.length - EWindowHierarchy.indexOf(id);
 }
 
 
 /*
-* Helper functions
+* Some useful Functions
 */
+
+// Clamp
+function EClamp(val, min, max) {
+	return val > max ? max : val < min ? min : val;
+}
+
+// Is Close
+function EIsClose(val, maxDist, tar) {
+	if (Math.abs(val - tar) <= maxDist) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 // Logging
 function ELog(text, isAlertLevel) {
