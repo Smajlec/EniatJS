@@ -102,6 +102,7 @@ function EWindow(name, size, position) {
 	this.minSize = new EVector(200, 100);
 	this.maxSize = new EVector(2000, 1000);
 	this.position = position;
+	this.isActive = false;
 
 	// Constructing window
 	this.window = document.createElement("div");
@@ -140,19 +141,33 @@ function EWindow(name, size, position) {
 	EWindows.push(this);
 	EWindowHierarchy.push(EWindows.indexOf(this));
 
+	// Functions
+	this.setActive = function(active) {
+		this.isActive = active;
+		EFocusWindow(EWindows.indexOf(this));
+	}
+
 	// Initial style update
 	EUpdateAll();
 
 	// Events
-	this.windowTitle.onmousedown = function(e) { EMovingWindow = parseInt(e.target.parentNode.id.split("_")[1]); EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); EFocusWindow(EMovingWindow); EUpdateAll(); };
-	this.resizeButton.onmousedown = function(e) { EResizingWindow = parseInt(e.target.parentNode.id.split("_")[1]); };
+	this.windowTitle.onmousedown = function(e) { EMovingWindow = parseInt(e.target.parentNode.id.split("_")[1]); EMovingOffset = new EVector(e.clientX - e.target.parentNode.offsetLeft, e.clientY - e.target.parentNode.offsetTop); EFocusWindow(EMovingWindow); };
 	
-	this.content.onmousedown = function(e) { EFocusWindow(parseInt(e.target.parentNode.id.split("_")[1])); EUpdateAll(); };
+	this.resizeButton.onmousedown = function(e) { EResizingWindow = parseInt(e.target.parentNode.id.split("_")[1]); };
+	this.closeButton.onclick = function(e) { ESetActive(e.target.parentNode.id.split("_")[1]); }
+
+	this.content.onmousedown = function(e) { EFocusWindow(parseInt(e.target.parentNode.id.split("_")[1])); };
 }
 
 /*
 * Window functions
 */
+
+// Window active
+function ESetActive(id, active) {
+	EWindows[id].isActive = active;
+	EFocusWindow(id);
+}
 
 // Rearranging windows hierarchy
 function EFocusWindow(id) {
@@ -166,6 +181,7 @@ function EFocusWindow(id) {
 	}
 
 	EWindowHierarchy = newHierarchy;
+	EUpdateAll();
 }
 
 // Dropping movement
@@ -286,6 +302,12 @@ function EUpdateStyle(id) {
 		return;
 	}
 
+	if (EWindows[id].isActive) {
+		EWindows[id].window.style.display = "initial";
+	} else {
+		EWindows[id].window.style.display = "none";
+	}
+
 	EWindows[id].window.style.left = EWindows[id].position.x + "px";
 	EWindows[id].window.style.top = EWindows[id].position.y + "px";
 
@@ -294,7 +316,7 @@ function EUpdateStyle(id) {
 
 	EWindows[id].windowTitle.textContent = EWindows[id].name;
 
-	EWindows[id].window.style.zIndex = EWindowHierarchy.length - EWindowHierarchy.indexOf(id);
+	EWindows[id].window.style.zIndex = EWindowHierarchy.length - EWindowHierarchy.indexOf(id) + 1000;
 }
 
 

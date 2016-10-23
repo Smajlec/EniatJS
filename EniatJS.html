@@ -7,15 +7,18 @@
 		<link href="https://fonts.googleapis.com/css?family=Lato:300" rel="stylesheet"> 
 	</head>
 	<body>
-	<script src="EniatJS.js"></script>
+		<button onclick="ESetActive(0, true)">Window 1</button>
+		<button onclick="testWindow2.setActive(true)">Window 2</button>
+		<button onclick="testWindow3.setActive(true)">Window 3</button>
+		<script src="EniatJS.js"></script>
 
-	<script>
-		var testWindow = new EWindow("Test Window", new EVector(600, 200), new EVector(250, 250));
-		var testWindow2 = new EWindow("Rarest EniatJS pepe", new EVector(300, 300), new EVector(500, 500));
-		var testWindow = new EWindow("Test Window #3", new EVector(600, 200), new EVector(250, 250));
+		<script>
+			var testWindow = new EWindow("Test Window", new EVector(600, 200), new EVector(250, 250));
+			var testWindow2 = new EWindow("Rarest EniatJS pepe", new EVector(300, 300), new EVector(500, 500));
+			var testWindow3 = new EWindow("Test Window #3", new EVector(600, 200), new EVector(250, 250));
 
-		testWindow2.content.innerHTML = "<img src='http://i3.kym-cdn.com/photos/images/facebook/000/862/065/0e9.jpg' width='300' height='300'>"
-		testWindow.content.innerHTML = "<h1>Test</h1>";
-	</script>
+			testWindow2.content.innerHTML = "<img src='http://i3.kym-cdn.com/photos/images/facebook/000/862/065/0e9.jpg' width='300' height='300'>"
+			testWindow.content.innerHTML = "<h1>Test</h1>";
+		</script>
 	</body>
 </html>
