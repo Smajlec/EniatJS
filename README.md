@@ -1,7 +1,7 @@
-#Every Name Is Already Taken JS
+# Every Name Is Already Taken JS
 **JavaScript framework adding windows to HTML**
 ![EniatJS Example](https://d3higte790sj35.cloudfront.net/images/id/ny/78fa33305472d5956ae735b231af1aa1.jpeg)
-###How to
+### How to
 
 1. Link EniatJS style 
 ```html
